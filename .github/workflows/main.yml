@@ -35,5 +35,5 @@ jobs:
         run: python main.py
       
       - name: ▶️ Run bot script 2
-        run: python main2.py
+        run: python main.py
 
