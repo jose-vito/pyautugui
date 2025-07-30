@@ -15,14 +15,13 @@ def get_chrome_windows():
     return [w for w in gw.getWindowsWithTitle('Chrome') if w.visible and w.title.strip() != ""]
 
 # 1. Mở Chrome với link và kích thước cố định
-old_url = "https://raw.githubusercontent.com/anisidina29/anisidina29-selenium_earnvids_docker/refs/heads/main/earnvids.txt"
+old_url = "https://raw.githubusercontent.com/anisidina29/anisidina29-selenium_earnvids_docker/refs/heads/main/earnvids_link2.txt"
 response_old = requests.get(old_url)
 response_old.raise_for_status()
 links = response_old.text.strip().splitlines()
 
 # Chọn 1 link ngẫu nhiên
 url = random.choice(links)
-url = "https://mxdrop.to/f/jd3p17p3un9j19"
 print(f"Da chon link: {url}")
 print("Dang mo Chrome...")
 subprocess.Popen(["start", "chrome", "--new-window", url, "--window-size=1280,720"], shell=True)
