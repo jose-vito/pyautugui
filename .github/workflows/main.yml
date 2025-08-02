@@ -33,6 +33,8 @@ jobs:
 
       - name: ▶️ Run bot script (PyAutoGUI)
         run: python main.py
+      - name: ▶️ Run bot script 2 (PyAutoGUI)
+        run: python main.py
 
   run-docker:
     name: Run Docker Containers (Ubuntu)
