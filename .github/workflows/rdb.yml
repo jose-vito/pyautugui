@@ -1,51 +1,37 @@
 name: RDB
 
-on: 
-  workflow_dispatch:
+on:  workflow_dispatch
 
 jobs:
   build:
+
     runs-on: windows-latest
 
-    strategy:
-      matrix:
-        instance: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
     steps:
-      - name: Create Windows User
-        run: |
-          $username = "newuser${{ matrix.instance }}"
-          New-LocalUser -Name $username -Password (ConvertTo-SecureString "Duythanh123." -AsPlainText -Force) -FullName "New User $username" -Description "Description of $username" -AccountNeverExpires
-          Add-LocalGroupMember -Group "Administrators" -Member $username
+    - name: Create Windows User
+      run: New-LocalUser -Name "newuser" -Password (ConvertTo-SecureString "Duythanh123." -AsPlainText -Force) -FullName "New User" -Description "Description of New User" -AccountNeverExpires
+    - name: Grant Admin Rights
+      run: Add-LocalGroupMember -Group "Administrators" -Member "newuser"
+    - name: Enable TS
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+    - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    # - name: Install dependencies
+    #   run: |
+    #     pip install PyAutoGUI opencv-python
 
-      - name: Enable RDP
-        run: |
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-
-      - uses: actions/checkout@v3
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-
-      # Uncomment if needed
-      # - name: Install dependencies
-      #   run: |
-      #     pip install PyAutoGUI opencv-python
-
-      - name: Download ngrok
-        run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-
-      - name: Extract ngrok
-        run: Expand-Archive ngrok.zip -DestinationPath .
-
-      - name: Authenticate ngrok
-        run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-        env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-
-      - name: Start ngrok tunnel
-        run: .\ngrok\ngrok.exe tcp 3389
+    - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    - name: Download
+      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+    - name: Extract
+      run: Expand-Archive ngrok.zip
+    - name: Auth
+      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+    - name: Create Tunnel
+      run: .\ngrok\ngrok.exe tcp 3389
