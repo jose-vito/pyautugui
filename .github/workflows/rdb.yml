@@ -9,22 +9,21 @@ jobs:
 
     strategy:
       matrix:
-        instance: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # 10 instance cho 10 job song song
+        instance: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     steps:
       - name: Create Windows User
         run: |
-          $username = "newuser${{ matrix.instance }}"
           $password = ConvertTo-SecureString "Duythanh123." -AsPlainText -Force
-          New-LocalUser -Name $username -Password $password -FullName "New User ${{ matrix.instance }}" -Description "User ${{ matrix.instance }}" -AccountNeverExpires
+          New-LocalUser -Name "newuser" -Password $password -FullName "New User" -Description "Description of New User" -AccountNeverExpires
 
       - name: Grant Admin Rights
-        run: Add-LocalGroupMember -Group "Administrators" -Member "newuser${{ matrix.instance }}"
+        run: Add-LocalGroupMember -Group "Administrators" -Member "newuser"
 
-      - name: Enable TS
-        run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-
-      - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+      - name: Enable Remote Desktop
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
       - uses: actions/checkout@v3
 
@@ -33,11 +32,8 @@ jobs:
         with:
           python-version: "3.10"
 
-      # - name: Install dependencies
-      #   run: |
-      #     pip install PyAutoGUI opencv-python
-
-      - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+      - name: Set RDP Auth
+        run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
 
       - name: Download ngrok
         run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
@@ -51,4 +47,4 @@ jobs:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
 
       - name: Create Tunnel
-        run: .\n
+        run: .\ngrok\ngrok.exe tcp 3389
